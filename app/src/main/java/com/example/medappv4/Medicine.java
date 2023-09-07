@@ -63,8 +63,8 @@ public class Medicine {
         }
     }
 
-    public int getName() {
-        return minute;
+    public String getName() {
+        return name;
     }
 
     public void setName(String name) {
