@@ -9,12 +9,22 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Locale;
 
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
 
     public MedicineAdapter(List<Medicine> medicines) {
         this.medicines = medicines;
+    }
+
+    public List<Medicine> getMedicines() {
+        return medicines;
+    }
+
+    @Override
+    public int getItemCount() {
+        return medicines.size();
     }
 
     @NonNull
@@ -28,7 +38,8 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine medicine = medicines.get(position);
         holder.medicineName.setText(medicine.getName());
-        holder.medicineTime.setText(String.format("%02d:%02d", medicine.getHourOfDay(), medicine.getMinute()));
+        holder.medicineTime.setText(String.format(Locale.US, "%02d:%02d",
+                                    medicine.getHourOfDay(), medicine.getMinute()));
 
         // Convert day boolean list to a string
         String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -44,12 +55,7 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         holder.medicineDays.setText(medicineDays.toString());
     }
 
-    @Override
-    public int getItemCount() {
-        return medicines.size();
-    }
-
-    class MedicineViewHolder extends RecyclerView.ViewHolder {
+    public static class MedicineViewHolder extends RecyclerView.ViewHolder {
         TextView medicineName, medicineTime, medicineDays;
 
         MedicineViewHolder(@NonNull View itemView) {
@@ -59,4 +65,18 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             medicineDays = itemView.findViewById(R.id.medicine_days);
         }
     }
+
+    public void addMedicine(Medicine medicine) {
+        this.medicines.add(medicine);
+        notifyItemInserted(medicines.size() - 1);
+    }
+    public void updateMedicine(int position, Medicine updatedMedicine) {
+        this.medicines.set(position, updatedMedicine);
+        notifyItemChanged(position);
+    }
+    public void removeMedicine(int position) {
+        this.medicines.remove(position);
+        notifyItemRemoved(position);
+    }
+
 }

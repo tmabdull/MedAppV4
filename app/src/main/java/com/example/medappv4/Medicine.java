@@ -8,9 +8,12 @@ public class Medicine {
     // [true, false, ..., true] => [Sunday, Monday, ..., Saturday]
     private List<Boolean> daysOfWeek;
     private String name;
+
     // Separate attributes for hour and minute to represent the time.
     private int hourOfDay;  // 0-23
     private int minute;     // 0-59
+
+    private String id;
 
 
     // Default constructor initializing the attributes.
@@ -34,11 +37,9 @@ public class Medicine {
     }
 
     // Getters and Setters
-
     public List<Boolean> getDaysOfWeek() {
         return daysOfWeek;
     }
-
     public void setDaysOfWeek(List<Boolean> daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
     }
@@ -46,7 +47,6 @@ public class Medicine {
     public int getHourOfDay() {
         return hourOfDay;
     }
-
     public void setHourOfDay(int hourOfDay) {
         if (hourOfDay >= 0 && hourOfDay < 24) {  // Validation
             this.hourOfDay = hourOfDay;
@@ -56,7 +56,6 @@ public class Medicine {
     public int getMinute() {
         return minute;
     }
-
     public void setMinute(int minute) {
         if (minute >= 0 && minute < 60) {  // Validation
             this.minute = minute;
@@ -66,8 +65,14 @@ public class Medicine {
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
     }
 }
