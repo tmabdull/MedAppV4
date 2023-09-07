@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "129336618773",
+    "project_id": "medappv3",
+    "storage_bucket": "medappv3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:129336618773:android:5e8814f91eb470dd9b031c",
+        "android_client_info": {
+          "package_name": "com.example.medappv3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "129336618773-6np3l6peiccf83jlhhs6vgje83i0o4k8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVkituhCYfhgOShTX2iwZkSnuq5fJSg-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "129336618773-6np3l6peiccf83jlhhs6vgje83i0o4k8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:129336618773:android:9906aa4ad64b3e1a9b031c",
+        "android_client_info": {
+          "package_name": "com.example.medappv4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "129336618773-6np3l6peiccf83jlhhs6vgje83i0o4k8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVkituhCYfhgOShTX2iwZkSnuq5fJSg-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "129336618773-6np3l6peiccf83jlhhs6vgje83i0o4k8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
