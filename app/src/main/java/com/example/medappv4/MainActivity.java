@@ -15,12 +15,13 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-
     private RecyclerView recyclerView;
     private MedicineAdapter adapter;
     private FirebaseFirestore db;
     private ListenerRegistration registration;
 
+    // This function sets up the initial state of the activity. This includes setting up the RecyclerView,
+    // initializing Firestore, and fetching the medicine data.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
         fetchMedicineData();
     }
 
+    // Utility function to find the index of a medicine in the local list using its ID.
+    // Returns -1 if not found.
     private int findMedicineIndexById(String id) {
         for (int i = 0; i < adapter.getMedicines().size(); i++) {
             if (adapter.getMedicines().get(i).getId().equals(id)) {
@@ -48,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
         return -1; // Not found
     }
 
+    // Function to fetch medicine data from Firestore and populate the RecyclerView.
+    // It also sets up real-time updates to listen for changes in the Firestore database.
     private void fetchMedicineData() {
         registration = db.collection("medicines")
                 .addSnapshotListener((QuerySnapshot snapshots, FirebaseFirestoreException e) -> {
@@ -91,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    // Properly detaches the Firestore listener to prevent memory leaks when the activity is destroyed.
     @Override
     protected void onDestroy() {
         super.onDestroy();
