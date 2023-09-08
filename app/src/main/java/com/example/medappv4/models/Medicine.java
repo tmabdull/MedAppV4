@@ -1,4 +1,4 @@
-package com.example.medappv4;
+package com.example.medappv4.models;
 
 import java.util.Arrays;
 import java.util.List;

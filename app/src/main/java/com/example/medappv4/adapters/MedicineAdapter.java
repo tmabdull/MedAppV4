@@ -1,4 +1,4 @@
-package com.example.medappv4;
+package com.example.medappv4.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,8 +8,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.medappv4.R;
+import com.example.medappv4.models.Medicine;
+import com.example.medappv4.utils.TimeUtils;
+
 import java.util.List;
-import java.util.Locale;
 
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
@@ -43,21 +46,8 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
     public void onBindViewHolder(@NonNull MedicineViewHolder holder, int position) {
         Medicine medicine = medicines.get(position);
         holder.medicineName.setText(medicine.getName());
-        holder.medicineTime.setText(String.format(Locale.US, "%02d:%02d",
-                                    medicine.getHourOfDay(), medicine.getMinute()));
-
-        // Convert day boolean list to a string
-        String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-        StringBuilder medicineDays = new StringBuilder();
-        for (int i = 0; i < medicine.getDaysOfWeek().size(); i++) {
-            if (medicine.getDaysOfWeek().get(i)) {
-                medicineDays.append(days[i]).append(", ");
-            }
-        }
-        if (medicineDays.length() > 0) {
-            medicineDays.delete(medicineDays.length() - 2, medicineDays.length());
-        }
-        holder.medicineDays.setText(medicineDays.toString());
+        holder.medicineTime.setText(TimeUtils.formatTime(medicine.getHourOfDay(), medicine.getMinute()));
+        holder.medicineDays.setText(TimeUtils.formatDays(medicine.getDaysOfWeek()));
     }
 
     // Inner ViewHolder class. Holds references to individual item views to avoid frequent lookups.
@@ -71,6 +61,18 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             medicineTime = itemView.findViewById(R.id.medicine_time);
             medicineDays = itemView.findViewById(R.id.medicine_days);
         }
+    }
+
+    // Utility function to find the index of a medicine in the local list using its ID.
+    // Returns -1 if not found.
+    public int findMedicineIndexById(String id) {
+        for (int i = 0; i < medicines.size(); i++) {
+            String medicineId = medicines.get(i).getId();
+            if (medicineId != null && medicineId.equals(id)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     // Method to add a new medicine to the list and notify RecyclerView of the change.
@@ -90,5 +92,4 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         this.medicines.remove(position);
         notifyItemRemoved(position);
     }
-
 }
