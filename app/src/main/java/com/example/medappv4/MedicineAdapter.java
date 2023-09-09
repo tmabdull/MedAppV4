@@ -3,6 +3,7 @@ package com.example.medappv4;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,17 +15,22 @@ import java.util.Optional;
 
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
-    private MedicineEditListener editListener;
 
     // Define the interface inside MedicineAdapter
     public interface MedicineEditListener {
         void onEditRequested(Medicine medicine);
     }
+    private MedicineEditListener editListener;
 
-    // Modify the constructor to accept the listener
-    public MedicineAdapter(List<Medicine> medicines, MedicineEditListener editListener) {
+    public interface MedicineDeleteListener {
+        void onDeleteRequested(String medicineId);
+    }
+    private MedicineDeleteListener deleteListener;
+
+    public MedicineAdapter(List<Medicine> medicines, MedicineEditListener editListener, MedicineDeleteListener deleteListener) {
         this.medicines = medicines;
         this.editListener = editListener;
+        this.deleteListener = deleteListener;
     }
 
     // Getter method for the list of medicines, can be used elsewhere to fetch the current state of the medicines list.
@@ -67,16 +73,27 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         }
         holder.medicineDays.setText(medicineDays.toString());
 
-        // Assuming you want to trigger the edit when an item is clicked
+        // Handle edit click
         holder.itemView.setOnClickListener(v -> {
             Medicine clickedMedicine = medicines.get(position);
             editListener.onEditRequested(clickedMedicine);
         });
+
+        // Handle delete button click
+        holder.deleteButton.setOnClickListener(v -> {
+            int currentPos = holder.getBindingAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                Medicine medicineToDelete = medicines.get(currentPos);
+                deleteListener.onDeleteRequested(medicineToDelete.getId());
+            }
+        });
+
     }
 
     // Inner ViewHolder class. Holds references to individual item views to avoid frequent lookups.
     public static class MedicineViewHolder extends RecyclerView.ViewHolder {
         TextView medicineName, medicineTime, medicineDays;
+        Button deleteButton;
 
         // Constructor for the ViewHolder. Initializes item view references.
         MedicineViewHolder(@NonNull View itemView) {
@@ -84,6 +101,7 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             medicineName = itemView.findViewById(R.id.medicine_name);
             medicineTime = itemView.findViewById(R.id.medicine_time);
             medicineDays = itemView.findViewById(R.id.medicine_days);
+            deleteButton = itemView.findViewById(R.id.deleteButton); // Initialize the delete button reference
         }
     }
 

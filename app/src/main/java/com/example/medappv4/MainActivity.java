@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class MainActivity extends AppCompatActivity implements MedicineAdapter.MedicineEditListener {
+public class MainActivity extends AppCompatActivity implements MedicineAdapter.MedicineEditListener, MedicineAdapter.MedicineDeleteListener {
     private RecyclerView recyclerView;
     private MedicineAdapter adapter;
     private FirebaseFirestore db;
@@ -42,8 +42,9 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Pass 'this' as the second parameter to MedicineAdapter since MainActivity implements MedicineEditListener
-        adapter = new MedicineAdapter(new ArrayList<>(), this);
+        // Pass 'this' as the second/third parameter to MedicineAdapter since MainActivity implements
+        // MedicineEditListener and MedicineDeleteListener
+        adapter = new MedicineAdapter(new ArrayList<>(), this, this);
         recyclerView.setAdapter(adapter);
 
         db = FirebaseFirestore.getInstance();
@@ -181,6 +182,25 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
         showAddEditDialog(Optional.of(medicine));
     }
 
+    // Implement the method from MedicineDeleteListener
+    @Override
+    public void onDeleteRequested(String medicineId) {
+        // Delete the document from Firestore
+        db.collection("medicines").document(medicineId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("MedAppV4", "Delete Successful");
+                    int index = findMedicineIndexById(medicineId);
+                    if (index != -1) {
+                        adapter.removeMedicine(index);
+                        adapter.notifyItemRemoved(index);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.d("MedAppV4", "Delete FAILED");
+                });
+    }
+
     // Utility function to find the index of a medicine in the local list using its ID.
     // Returns -1 if not found.
     private int findMedicineIndexById(String id) {
@@ -198,8 +218,7 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
         registration = db.collection("medicines")
                 .addSnapshotListener((QuerySnapshot snapshots, FirebaseFirestoreException e) -> {
                     if (e != null) {
-                        // Handle error
-                        Log.d("MedAppV4", "e is not null -> addSnapshotListener");
+                        Log.e("MedAppV4", "Error listening for document changes", e);
                         return;
                     }
                     if (snapshots != null && !snapshots.isEmpty()) {
@@ -213,11 +232,8 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
                                     adapter.addMedicine(medicine);
                                     break;
                                 case MODIFIED:
-                                    // Get the ID of the modified document
-                                    String modifiedDocId = dc.getDocument().getId();
-
                                     // Find the index of this ID in the adapter's dataset
-                                    index = findMedicineIndexById(modifiedDocId);
+                                    index = findMedicineIndexById(dc.getDocument().getId());
 
                                     if (index != -1) {
                                         adapter.updateMedicine(index, medicine);
