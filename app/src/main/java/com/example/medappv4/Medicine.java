@@ -29,7 +29,7 @@ public class Medicine {
     }
 
     // Parameterized constructor to initialize with provided values.
-    public Medicine(List<Boolean> daysOfWeek, int hourOfDay, int minute) {
+    public Medicine(List<Boolean> daysOfWeek, int hourOfDay, int minute, String name) {
         this.daysOfWeek = daysOfWeek;
         this.hourOfDay = hourOfDay;
         this.minute = minute;
@@ -76,3 +76,4 @@ public class Medicine {
         this.id = id;
     }
 }
+
