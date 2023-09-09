@@ -25,49 +25,49 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sun" />
+            android:text="Su" />
 
         <CheckBox
             android:id="@+id/check_monday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Mon" />
+            android:text="M" />
 
         <CheckBox
             android:id="@+id/check_tuesday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Tue" />
+            android:text="T" />
 
         <CheckBox
             android:id="@+id/check_wednesday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Wed" />
+            android:text="W" />
 
         <CheckBox
             android:id="@+id/check_thursday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Thu" />
+            android:text="R" />
 
         <CheckBox
             android:id="@+id/check_friday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Fri" />
+            android:text="F" />
 
         <CheckBox
             android:id="@+id/check_saturday"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sat" />
+            android:text="S" />
 
     </LinearLayout>
 
@@ -77,11 +77,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:timePickerMode="spinner" />
-
-    <Button
-        android:id="@+id/saveButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save" />
 
 </LinearLayout>

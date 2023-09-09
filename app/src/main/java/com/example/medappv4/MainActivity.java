@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,9 +22,11 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MedicineAdapter.MedicineEditListener {
     private RecyclerView recyclerView;
     private MedicineAdapter adapter;
     private FirebaseFirestore db;
@@ -39,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Initialize adapter with an empty list
-        adapter = new MedicineAdapter(new ArrayList<>());
+        // Pass 'this' as the second parameter to MedicineAdapter since MainActivity implements MedicineEditListener
+        adapter = new MedicineAdapter(new ArrayList<>(), this);
         recyclerView.setAdapter(adapter);
 
         db = FirebaseFirestore.getInstance();
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         // Add button
         FloatingActionButton fab = findViewById(R.id.add_medicine_fab);
         fab.setOnClickListener(v -> {
-            showAddMedicineDialog();
+            showAddEditDialog(Optional.empty());
         });
 
         // Fetch medicine data in real-time
@@ -56,57 +59,76 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Displays a dialog to the user, allowing them to input details for a new medicine.
-     * The dialog includes:
-     * 1. A field to input the medicine's name.
-     * 2. Checkboxes for selecting the days of the week.
-     * 3. A time picker to set the medicine's intake time.
-     * 4. A save button to store the entered details.
+     * Displays a dialog allowing users to add or edit a medicine.
      *
-     * Upon pressing the save button, the entered details are collected,
-     * a new Medicine object is created, and it is sent to Firestore
-     * via the addMedicineToFirestore method.
+     * @param medicineToEditOptional The medicine to edit. If null, the user is adding a new medicine.
      */
-    private void showAddMedicineDialog() {
+    public void showAddEditDialog(Optional<Medicine> medicineToEditOptional) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
+
         View view = inflater.inflate(R.layout.dialog_edit_medicine, null);
-        builder.setView(view);
 
-        EditText medicineName = view.findViewById(R.id.edit_medicine_name);
+        // Link UI components
+        EditText editName = view.findViewById(R.id.edit_medicine_name);
+
+        CheckBox checkSunday = view.findViewById(R.id.check_sunday);
+        CheckBox checkMonday = view.findViewById(R.id.check_monday);
+        CheckBox checkTuesday = view.findViewById(R.id.check_tuesday);
+        CheckBox checkWednesday = view.findViewById(R.id.check_wednesday);
+        CheckBox checkThursday = view.findViewById(R.id.check_thursday);
+        CheckBox checkFriday = view.findViewById(R.id.check_friday);
+        CheckBox checkSaturday = view.findViewById(R.id.check_saturday);
+
         TimePicker timePicker = view.findViewById(R.id.time_picker_medicine);
-        CheckBox[] dayChecks = {
-                view.findViewById(R.id.check_sunday),
-                view.findViewById(R.id.check_monday),
-                view.findViewById(R.id.check_tuesday),
-                view.findViewById(R.id.check_wednesday),
-                view.findViewById(R.id.check_thursday),
-                view.findViewById(R.id.check_friday),
-                view.findViewById(R.id.check_saturday)
-        };
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            // Retrieve data
-            String name = medicineName.getText().toString();
-            List<Boolean> days = new ArrayList<>();
-            for (CheckBox check : dayChecks) {
-                days.add(check.isChecked());
-            }
-            int hour = timePicker.getHour();
-            int minute = timePicker.getMinute();
+        if (medicineToEditOptional.isPresent()) {
+            // This means we're editing, so populate fields with current data
+            Medicine medicineToEdit = medicineToEditOptional.get();
 
-            // Create a new Medicine instance
-            Medicine newMedicine = new Medicine(days, minute, hour, name);
+            editName.setText(medicineToEdit.getName());
 
-            // Save this to Firestore
-            addMedicineToFirestore(newMedicine);
-        });
+            checkSunday.setChecked(medicineToEdit.getDaysOfWeek().get(0));
+            checkMonday.setChecked(medicineToEdit.getDaysOfWeek().get(1));
+            checkTuesday.setChecked(medicineToEdit.getDaysOfWeek().get(2));
+            checkWednesday.setChecked(medicineToEdit.getDaysOfWeek().get(3));
+            checkThursday.setChecked(medicineToEdit.getDaysOfWeek().get(4));
+            checkFriday.setChecked(medicineToEdit.getDaysOfWeek().get(5));
+            checkSaturday.setChecked(medicineToEdit.getDaysOfWeek().get(6));
 
-        builder.setNegativeButton("Cancel", null);
+            timePicker.setHour(medicineToEdit.getHourOfDay());
+            timePicker.setMinute(medicineToEdit.getMinute());
+        }
 
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        builder.setView(view)
+                .setTitle(medicineToEditOptional.orElse(null) == null ? "Add Medicine" : "Edit Medicine")
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String name = editName.getText().toString();
+                    List<Boolean> days = Arrays.asList(
+                            checkSunday.isChecked(),
+                            checkMonday.isChecked(),
+                            checkTuesday.isChecked(),
+                            checkWednesday.isChecked(),
+                            checkThursday.isChecked(),
+                            checkFriday.isChecked(),
+                            checkSaturday.isChecked()
+                    );
+                    int hour = timePicker.getHour();
+                    int minute = timePicker.getMinute();
+                    Medicine medicine = new Medicine(days, hour, minute, name);
+                    medicine.setName(name);
+
+                    if (medicineToEditOptional.orElse(null) == null) {
+                        addMedicineToFirestore(medicine);
+                    } else {
+                        medicine.setId(medicineToEditOptional.orElse(null).getId());  // Important: Set ID for edited medicine
+                        updateMedicineInFirestore(medicine);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
+
 
     /**
      * Adds a Medicine object to the Firestore collection named 'medicines'.
@@ -133,6 +155,30 @@ public class MainActivity extends AppCompatActivity {
                     Log.w("MainActivity", "Error adding document", e);
                     Toast.makeText(MainActivity.this, "Error saving medicine!", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    /**
+     * Updates an existing medicine document in Firestore.
+     *
+     * @param updatedMedicine The edited medicine with updated details.
+     */
+    private void updateMedicineInFirestore(Medicine updatedMedicine) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("medicines").document(updatedMedicine.getId())
+                .set(updatedMedicine)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("MainActivity", "DocumentSnapshot successfully updated!");
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("MainActivity", "Error updating document", e);
+                    Toast.makeText(MainActivity.this, "Error updating medicine!", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Implementation of the method from MedicineEditListener
+    @Override
+    public void onEditRequested(Medicine medicine) {
+        showAddEditDialog(Optional.of(medicine));
     }
 
     // Utility function to find the index of a medicine in the local list using its ID.

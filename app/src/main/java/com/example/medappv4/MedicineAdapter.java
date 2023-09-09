@@ -10,13 +10,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.MedicineViewHolder> {
     private List<Medicine> medicines;
+    private MedicineEditListener editListener;
 
-    // Constructor for the adapter. Initializes the local medicines list.
-    public MedicineAdapter(List<Medicine> medicines) {
+    // Define the interface inside MedicineAdapter
+    public interface MedicineEditListener {
+        void onEditRequested(Medicine medicine);
+    }
+
+    // Modify the constructor to accept the listener
+    public MedicineAdapter(List<Medicine> medicines, MedicineEditListener editListener) {
         this.medicines = medicines;
+        this.editListener = editListener;
     }
 
     // Getter method for the list of medicines, can be used elsewhere to fetch the current state of the medicines list.
@@ -58,6 +66,12 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
             medicineDays.delete(medicineDays.length() - 2, medicineDays.length());
         }
         holder.medicineDays.setText(medicineDays.toString());
+
+        // Assuming you want to trigger the edit when an item is clicked
+        holder.itemView.setOnClickListener(v -> {
+            Medicine clickedMedicine = medicines.get(position);
+            editListener.onEditRequested(clickedMedicine);
+        });
     }
 
     // Inner ViewHolder class. Holds references to individual item views to avoid frequent lookups.
