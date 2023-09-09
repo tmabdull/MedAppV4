@@ -16,17 +16,20 @@ public class Medicine {
     private String id;
 
 
-    // Default constructor initializing the attributes.
-    public Medicine() {
-        // Initialize the daysOfWeek list with all false values (no notifications by default).
-        this.daysOfWeek = Arrays.asList(false, false, false, false, false, false, false);
+//    // Default constructor initializing the attributes.
+//    public Medicine() {
+//        // Initialize the daysOfWeek list with all false values (no notifications by default).
+//        this.daysOfWeek = Arrays.asList(false, false, false, false, false, false, false);
+//
+//        // Setting a default time, here, 12:00 (noon). You can adjust as needed.
+//        this.hourOfDay = 12;
+//        this.minute = 0;
+//
+//        this.name = "";
+//    }
 
-        // Setting a default time, here, 12:00 (noon). You can adjust as needed.
-        this.hourOfDay = 12;
-        this.minute = 0;
-
-        this.name = "";
-    }
+    // Firestore needs an empty constructor -- it will use the setter methods
+    public Medicine() {}
 
     // Parameterized constructor to initialize with provided values.
     public Medicine(List<Boolean> daysOfWeek, int hourOfDay, int minute, String name) {
