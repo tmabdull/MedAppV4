@@ -70,6 +70,16 @@ public class DatabaseHelper {
     }
 
     // Add future methods for adding, editing, and deleting medicines
+    public void addMedicine(Medicine medicine, OnTaskCompleted callback) {
+        // Use Firestore reference to the medicines collection
+        db.collection("medicines").add(medicine)
+                .addOnSuccessListener(documentReference -> callback.onTaskCompleted(true))
+                .addOnFailureListener(e -> callback.onTaskCompleted(false));
+    }
+
+    public interface OnTaskCompleted {
+        void onTaskCompleted(boolean isSuccess);
+    }
 
     // To handle listener deregistration
     public void detachListener() {

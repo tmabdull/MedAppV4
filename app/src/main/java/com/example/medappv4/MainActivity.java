@@ -14,6 +14,7 @@ import com.example.medappv4.database.DatabaseHelper;
 import com.example.medappv4.utils.DialogHelper;
 import com.example.medappv4.utils.TimeUtils;
 import com.example.medappv4.constants.Constants;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        FloatingActionButton fab = findViewById(R.id.fab_add_medicine);
+        fab.setOnClickListener(v -> showDialogToAddMedicine());
     }
 
     // Properly detaches the Firestore listener to prevent memory leaks when the activity is destroyed.
