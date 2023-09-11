@@ -1,6 +1,12 @@
 package com.example.medappv4;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +29,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +64,12 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
 
         // Fetch medicine data in real-time
         fetchMedicineData();
+
+        // Notification channel for >= Android Oreo
+        NotificationChannel channel = new NotificationChannel("MEDICINE_CHANNEL",
+                "Medicine Reminders", NotificationManager.IMPORTANCE_HIGH);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 
     /**
@@ -247,10 +260,84 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
                                     break;
                             }
                         }
+                        // After data has been fetched and RecyclerView populated
+                        scheduleAlarmsForAllMedicines();
                     } else {
                         Log.d("MedAppV4", "Snapshots is null or empty");
                     }
                 });
+    }
+
+    /**
+     * Schedule alarms for all medicines
+     */
+    private void scheduleAlarmsForAllMedicines() {
+        List<Medicine> medicines = adapter.getMedicines();
+        for (Medicine medicine : medicines) {
+            scheduleAlarmForMedicine(medicine);
+        }
+    }
+
+    /**
+     * Schedule non-recurring alarms for a specific medicine
+     * @param medicine The medicine for which to schedule alarms
+     */
+    private void scheduleAlarmForMedicine(Medicine medicine) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+
+        Log.d("MedAppV4", "Creating Alarm Intent");
+        // Create a new intent specifying the AlarmReceiver
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.setAction("com.example.medappv4.ALARM_ACTION");
+        intent.putExtra("medicine_name", medicine.getName());
+
+        // Convert day strings (e.g., "Mon") to Calendar.DAY constants
+        List<Integer> daysOfWeek = getCalendarDays(medicine.getDaysOfWeek());
+
+        for (int dayOfWeek : daysOfWeek) {
+            calendar.set(Calendar.DAY_OF_WEEK, dayOfWeek);
+            calendar.set(Calendar.HOUR_OF_DAY, medicine.getHourOfDay());
+            calendar.set(Calendar.MINUTE, medicine.getMinute());
+
+            if (calendar.before(Calendar.getInstance())) {
+                // This ensures the alarm is set for next week if today's time has already passed.
+                calendar.add(Calendar.DAY_OF_YEAR, 7);
+            }
+
+            // Create a PendingIntent that will broadcast the alarm intent
+            PendingIntent alarmIntent = PendingIntent.getBroadcast(this,
+                    medicine.getId().hashCode() + dayOfWeek, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            // Use the AlarmClockInfo
+            AlarmManager.AlarmClockInfo alarmClockInfo = new AlarmManager.AlarmClockInfo(
+                    calendar.getTimeInMillis(), alarmIntent);
+
+            // Finally, set the alarm
+            alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
+        }
+    }
+
+    /**
+     * Converts a list of day booleans to Calendar.DAY constants
+     * @param daysOfWeek The list of days as booleans
+     * @return A list of Calendar.DAY constants corresponding to the input days
+     */
+    private List<Integer> getCalendarDays(List<Boolean> daysOfWeek) {
+        List<Integer> calendarDays = new ArrayList<>();
+
+        if (daysOfWeek.get(0)) calendarDays.add(Calendar.SUNDAY);
+        if (daysOfWeek.get(1)) calendarDays.add(Calendar.MONDAY);
+        if (daysOfWeek.get(2)) calendarDays.add(Calendar.TUESDAY);
+        if (daysOfWeek.get(3)) calendarDays.add(Calendar.WEDNESDAY);
+        if (daysOfWeek.get(4)) calendarDays.add(Calendar.THURSDAY);
+        if (daysOfWeek.get(5)) calendarDays.add(Calendar.FRIDAY);
+        if (daysOfWeek.get(6)) calendarDays.add(Calendar.SATURDAY);
+
+        return calendarDays;
     }
 
     // Properly detaches the Firestore listener to prevent memory leaks when the activity is destroyed.
