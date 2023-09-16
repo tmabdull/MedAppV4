@@ -122,6 +122,5 @@ public class MedicineAdapter extends RecyclerView.Adapter<MedicineAdapter.Medici
         this.medicines.remove(position);
         notifyItemRemoved(position);
     }
-
 }
 

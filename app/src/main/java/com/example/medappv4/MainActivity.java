@@ -30,6 +30,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -198,6 +199,19 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
     // Implement the method from MedicineDeleteListener
     @Override
     public void onDeleteRequested(String medicineId) {
+        // Retrieve the index of the medicine using its ID
+        int indexToDelete = findMedicineIndexById(medicineId);
+
+        if (indexToDelete != -1) {
+            // Fetch the medicine object using the index
+            Medicine medicineToDelete = adapter.getMedicines().get(indexToDelete);
+
+            if (medicineToDelete != null) {
+                // Cancel the associated alarms
+                cancelAlarmsForMedicine(medicineToDelete);
+            }
+        }
+
         // Delete the document from Firestore
         db.collection("medicines").document(medicineId)
                 .delete()
@@ -279,32 +293,40 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
     }
 
     /**
-     * Schedule non-recurring alarms for a specific medicine
+     * Schedule recurring alarms for a specific medicine
      * @param medicine The medicine for which to schedule alarms
      */
     private void scheduleAlarmForMedicine(Medicine medicine) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
+        // TODO: Check initial date for alarm - if it's for a passed day, set initial as the next week
+        // ex. Today is Thursday. Setting alarm for Wed and Thurs
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
 
+        int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+
         Log.d("MedAppV4", "Creating Alarm Intent");
-        // Create a new intent specifying the AlarmReceiver
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.setAction("com.example.medappv4.ALARM_ACTION");
         intent.putExtra("medicine_name", medicine.getName());
 
         // Convert day strings (e.g., "Mon") to Calendar.DAY constants
         List<Integer> daysOfWeek = getCalendarDays(medicine.getDaysOfWeek());
+        Collections.sort(daysOfWeek);  // Sort the days in ascending order
 
         for (int dayOfWeek : daysOfWeek) {
             calendar.set(Calendar.DAY_OF_WEEK, dayOfWeek);
             calendar.set(Calendar.HOUR_OF_DAY, medicine.getHourOfDay());
             calendar.set(Calendar.MINUTE, medicine.getMinute());
 
-            if (calendar.before(Calendar.getInstance())) {
-                // This ensures the alarm is set for next week if today's time has already passed.
-                calendar.add(Calendar.DAY_OF_YEAR, 7);
+            // If the day is in the past or if it's today and the time has already passed
+            if(dayOfWeek < currentDayOfWeek
+                    || (dayOfWeek == currentDayOfWeek
+                    && (medicine.getHourOfDay() < currentHour
+                    || (medicine.getHourOfDay() == currentHour && medicine.getMinute() <= currentMinute)))) {
+                calendar.add(Calendar.DAY_OF_YEAR, 7);  // Shift to the same day next week
             }
 
             // Create a PendingIntent that will broadcast the alarm intent
@@ -318,6 +340,30 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
 
             // Finally, set the alarm
             alarmManager.setAlarmClock(alarmClockInfo, alarmIntent);
+        }
+    }
+
+    /**
+     * Cancel the alarms associated with a specific medicine.
+     * @param medicine The medicine for which to cancel alarms.
+     */
+    private void cancelAlarmsForMedicine(Medicine medicine) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.setAction("com.example.medappv4.ALARM_ACTION");
+        intent.putExtra("medicine_name", medicine.getName());
+
+        List<Integer> daysOfWeek = getCalendarDays(medicine.getDaysOfWeek());
+
+        for (int dayOfWeek : daysOfWeek) {
+            // Ensure the PendingIntent request code is consistent with when it was created
+            PendingIntent alarmIntent = PendingIntent.getBroadcast(this,
+                    medicine.getId().hashCode() + dayOfWeek, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            // Cancel the alarm using the same PendingIntent
+            alarmManager.cancel(alarmIntent);
         }
     }
 
@@ -336,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
         if (daysOfWeek.get(4)) calendarDays.add(Calendar.THURSDAY);
         if (daysOfWeek.get(5)) calendarDays.add(Calendar.FRIDAY);
         if (daysOfWeek.get(6)) calendarDays.add(Calendar.SATURDAY);
-
+        Log.d("MedAppV4", calendarDays.toString());
         return calendarDays;
     }
 
@@ -344,7 +390,6 @@ public class MainActivity extends AppCompatActivity implements MedicineAdapter.M
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         // Detach listener when the activity is destroyed to prevent memory leaks
         if (registration != null) {
             registration.remove();
